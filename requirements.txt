@@ -1,4 +1,1 @@
-git+https://github.com/Rapptz/discord.py@rewrite
-dnspython==2.0.0
-PyNaCl==1.4.0
-async-timeout==3.0.1
+discord.py
