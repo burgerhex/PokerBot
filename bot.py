@@ -2,9 +2,10 @@ import discord
 import os
 import random
 from helpers import *
+from poker.cards import Deck
 
 
-client = discord.Client()
+client = discord.Client(request_offline_members=False)
 TOKEN = os.environ.get("BOT_TOKEN")
 
 
@@ -74,6 +75,19 @@ async def on_message(message):
 
         await send("Deleted game channels!")
 
+
+    elif cmd in ["card"]:
+        deck = Deck().shuffle()
+        card = deck.deal()
+        await channel.send(f"Your card is the {card}.")
+
+
+    elif cmd in ["war"]:
+        deck = Deck().shuffle()
+        card1 = deck.deal()
+        card2 = deck.deal()
+        winner = 1 if card1 > card2 else 2
+        await channel.send(f"Card 1 is {card1}, and card 2 is {card2}. Card {winner} wins!")
 
 
 client.run(TOKEN)

@@ -6,6 +6,10 @@ def is_command(msg):
     return msg.startswith(COMMAND_START)
 
 
+def capitalize(st):
+    return st[0].upper() + st[1:].lower()
+
+
 def extract_parts(command):
     assert command.startswith(COMMAND_START), "can't extract parts from non-command message"
 
