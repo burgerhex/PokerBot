@@ -1,11 +1,14 @@
 # all of these functions return False if the associated hand is not present,
 # and return the cards that create the hand if it is present
 from enum import Enum
-from poker.cards import Rank, Deck
-from helpers import capitalize
-# import tqdm
+from poker.cards import Rank
 
 NUM_HANDS = 10
+
+
+class PokerHand(Enum):
+    HIGH_CARD, PAIR, TWO_PAIR, THREE_KIND, STRAIGHT, FLUSH, FULL_HOUSE, \
+        FOUR_KIND, STRAIGHT_FLUSH, ROYAL_FLUSH = range(NUM_HANDS)
 
 
 def has_royal_flush(hand):
@@ -164,11 +167,6 @@ def has_group(hand, group_size):
     return cards_of_rank[:group_size]
 
 
-class PokerHand(Enum):
-    HIGH_CARD, PAIR, TWO_PAIR, THREE_KIND, STRAIGHT, FLUSH, FULL_HOUSE, \
-        FOUR_KIND, STRAIGHT_FLUSH, ROYAL_FLUSH = range(NUM_HANDS)
-
-
 def detect_hand(hand):
     hand_funcs = [has_royal_flush, has_straight_flush, has_four_kind, has_full_house,
                   has_flush, has_straight, has_three_kind, has_two_pair, has_pair]
@@ -186,54 +184,3 @@ def detect_hand(hand):
         found = func(hand)
         if found:
             return PokerHand(NUM_HANDS - hand_num - 1), found
-
-
-# TEST 1 - testing that the functions work
-# hands = 0
-# while True:
-#     HAND_SIZE = 7
-#     HAND_FUNC = has_pair
-#
-#     deck = Deck().shuffle()
-#     hand = [deck.deal() for i in range(HAND_SIZE)]
-#     hands += 1
-#     found = HAND_FUNC(hand)
-#     if found:
-#         print("hand: ", end='')
-#         print([str(c) for c in sorted(hand, key=lambda c: c.rank.value)])
-#         print("found: ", end='')
-#         print([str(c) for c in found])
-#         print(f"{hands} hands searched")
-#         break
-
-# TEST 2 - more of a simulation really
-# hands = 1000000
-# HAND_SIZE = 7
-# hand_types = ["rf", "sf", "4k", "fh", "fl", "st", "3k", "2p", "pr"]
-# hand_funcs = [has_royal_flush, has_straight_flush, has_four_kind, has_full_house,
-#               has_flush, has_straight, has_three_kind, has_two_pair, has_pair]
-# found_hands = {typ: 0 for typ in hand_types}
-# for _ in tqdm.tqdm(range(hands)):
-#     deck = Deck().shuffle()
-#     hand = [deck.deal() for _ in range(HAND_SIZE)]
-#
-#     for i in range(len(hand_types)):
-#         found = hand_funcs[i](hand)
-#         if found:
-#             found_hands[hand_types[i]] += 1
-#
-# print(found_hands)
-
-# TEST 3 - testing detection of hands
-NUM_TESTS = 5
-HAND_SIZE = 7
-for _ in range(NUM_TESTS):
-    deck = Deck().shuffle()
-    hand_ = [deck.deal() for i in range(HAND_SIZE)]
-
-    hand_type, hand_cards = detect_hand(hand_)
-
-    print("Cards:      " + ", ".join([str(c) for c in hand_]))
-    print("Hand found: " + capitalize(hand_type.name.replace("_", " ")))
-    print("Hand cards: " + ", ".join([str(c) for c in hand_cards]))
-    print()

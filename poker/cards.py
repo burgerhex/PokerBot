@@ -1,8 +1,6 @@
 from enum import Enum
 from helpers import capitalize
-from random import random
-from math import floor
-
+from random import shuffle
 
 NUM_SUITS = 4
 NUM_RANKS = 13
@@ -64,9 +62,7 @@ class Deck:
 
 
     def shuffle(self):
-        for i in range(len(self.cards)):
-            j = floor(random() * len(self.cards))
-            self.cards[i], self.cards[j] = self.cards[j], self.cards[i]
+        shuffle(self.cards)
         return self
 
 

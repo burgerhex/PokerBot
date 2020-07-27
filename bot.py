@@ -1,12 +1,18 @@
 import discord
 import os
 import random
+from asyncio import sleep
 from helpers import *
-from poker.cards import Deck
+from poker.game import Game
 
 
 client = discord.Client(request_offline_members=False)
 TOKEN = os.environ.get("BOT_TOKEN")
+
+JOIN_TIMEOUT = 8
+MAX_PLAYERS = 8
+
+games = []
 
 
 @client.event
@@ -21,10 +27,13 @@ async def on_message(message):
     send = channel.send # this is a function
     author = message.author
     msg = message.content
-    id = message.id
 
-    # don't respond to self, don't respond to non-commands, and don't respond to DMs
-    if author == client.user or not is_command(msg) or not guild:
+    # clear empty games
+    global games
+    games = [game for game in games if game.active]
+
+    # don't respond to self
+    if author == client.user or not is_command(msg):
         return
 
     print(f"Received command attempt \"{msg}\" from {author} in {channel} in {guild}")
@@ -50,44 +59,54 @@ async def on_message(message):
         await send(f"Flipped {'Heads' if (random.random() > 0.5) else 'Tails'}.")
 
 
-    elif cmd in ["game"]:
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            author: discord.PermissionOverwrite(read_messages=True)
-        }
+    # TODO: disallow people already in games
+    elif cmd in ["game", "startgame", "start"]:
+        pre_message = f"{author.mention} is starting a poker game! React to this message to join! "
+        game_message = await send(pre_message + f"{JOIN_TIMEOUT} seconds left!")
+        await game_message.add_reaction("✅")
 
-        name = " ".join(args) if args else 1
+        await sleep(JOIN_TIMEOUT / 4)
 
-        category = await guild.create_category(f"Poker Game {name}", overwrites=overwrites)
-        game = await guild.create_text_channel("game", category=category)
-        chat = await guild.create_text_channel("chat", category=category)
-        voice = await guild.create_voice_channel("voice", category=category)
+        for i in range(3, 0, -1):
+            await game_message.edit(content=pre_message + f"{i / 4 * JOIN_TIMEOUT} seconds left!")
+            await sleep(JOIN_TIMEOUT / 4)
 
-        await send("Created category and channels!")
+        reactors = [author]
+        cache_msg = discord.utils.get(client.cached_messages, id=game_message.id)
+
+        for reaction in cache_msg.reactions:
+            async for user in reaction.users():
+                if user.id not in [r.id for r in reactors] and user != client.user:
+                    reactors.append(user)
+                if len(reactors) == MAX_PLAYERS:
+                    break
+            else:
+                continue
+            break
+
+        if len(reactors) < 2:
+            await game_message.edit(content=f"Not enough players reacted; the game is cancelled. :slight_frown:")
+            await game_message.clear_reactions()
+            return
+
+        await game_message.edit(content=f"{author.mention} has started a poker game! "
+                                        f"Players: {english_list(reactors, lambda r: r.mention)}")
+        await game_message.clear_reactions()
+
+        game = Game(reactors, client)
+        games.append(game)
+        await game.deal_to_all()
+        await game.round()
 
 
-    elif cmd in ["delete", "del"]:
-        for channel in guild.channels[::-1]:
-            if isinstance(channel, discord.CategoryChannel) and channel.name.lower().startswith("poker game"):
-                for subchannel in channel.channels[::-1]:
-                    await subchannel.delete()
-                await channel.delete()
+    elif cmd in ["game?"]:
+        game = discord.utils.find(lambda g: author in g.players, games)
 
-        await send("Deleted game channels!")
-
-
-    elif cmd in ["card"]:
-        deck = Deck().shuffle()
-        card = deck.deal()
-        await channel.send(f"Your card is the {card}.")
-
-
-    elif cmd in ["war"]:
-        deck = Deck().shuffle()
-        card1 = deck.deal()
-        card2 = deck.deal()
-        winner = 1 if card1 > card2 else 2
-        await channel.send(f"Card 1 is {card1}, and card 2 is {card2}. Card {winner} wins!")
+        if game:
+            players_but = [p for p in game.players if p != author]
+            await send(f"You are in a game with {english_list(players_but, lambda p: p.mention)}.")
+        else:
+            await send("You are not currrently in a game.")
 
 
 client.run(TOKEN)

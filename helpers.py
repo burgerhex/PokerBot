@@ -13,10 +13,7 @@ def capitalize(st):
 def extract_parts(command):
     assert command.startswith(COMMAND_START), "can't extract parts from non-command message"
 
-    # remove command start
     command = command[len(COMMAND_START):]
-
-    # split by space, remove empties, and return
     parts = command.split(" ")
 
     while "" in parts:
@@ -24,3 +21,20 @@ def extract_parts(command):
 
     return parts
 
+
+def english_list(ls, func=lambda x: x):
+    ls = [func(elem) for elem in ls]
+
+    if len(ls) == 0:
+        return ""
+    elif len(ls) == 1:
+        return ls[0]
+    elif len(ls) == 2:
+        return f"{ls[0]} and {ls[1]}"
+    else:
+        result = ""
+
+        for item in ls[:-1]:
+            result += item + ", "
+
+        return result + "and " + ls[-1]
