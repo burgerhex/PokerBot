@@ -10,6 +10,11 @@ class PokerHand(Enum):
     HIGH_CARD, PAIR, TWO_PAIR, THREE_KIND, STRAIGHT, FLUSH, FULL_HOUSE, \
         FOUR_KIND, STRAIGHT_FLUSH, ROYAL_FLUSH = range(NUM_HANDS)
 
+    def real_name(self):
+        types = ["High Card", "Pair", "Two Pair", "Three of a Kind", "Straight", "Flush",
+                 "Full House", "Four of a Kind", "Straight Flush", "Royal Flush"]
+        return types[self.value]
+
 
 def has_royal_flush(hand):
     if len(hand) < 5:
@@ -171,16 +176,15 @@ def detect_hand(hand):
     hand_funcs = [has_royal_flush, has_straight_flush, has_four_kind, has_full_house,
                   has_flush, has_straight, has_three_kind, has_two_pair, has_pair]
 
-    for hand_num in range(NUM_HANDS):
-        if hand_num == NUM_HANDS - 1:
-            if Rank.ACE in [c.rank for c in hand]:
-                m = [c for c in hand if c.rank == Rank.ACE][0]
-            else:
-                m = max(hand, key=lambda c: c.rank.value)
-
-            return PokerHand.HIGH_CARD, [m]
-
+    for hand_num in range(NUM_HANDS - 1):
         func = hand_funcs[hand_num]
         found = func(hand)
         if found:
             return PokerHand(NUM_HANDS - hand_num - 1), found
+
+    if Rank.ACE in [c.rank for c in hand]:
+        m = next(c for c in hand if c.rank == Rank.ACE)
+    else:
+        m = max(hand, key=lambda c: c.rank.value)
+
+    return PokerHand.HIGH_CARD, [m]

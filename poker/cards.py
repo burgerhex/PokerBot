@@ -7,7 +7,6 @@ NUM_RANKS = 13
 CARDS_IN_DECK = 52
 
 
-# enums because i'm extra and want to emulate java :)
 class Suit(Enum):
     DIAMONDS, HEARTS, CLUBS, SPADES = range(NUM_SUITS)
 

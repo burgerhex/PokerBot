@@ -28,13 +28,13 @@ def english_list(ls, func=lambda x: x):
     if len(ls) == 0:
         return ""
     elif len(ls) == 1:
-        return ls[0]
+        return str(ls[0])
     elif len(ls) == 2:
-        return f"{ls[0]} and {ls[1]}"
+        return f"{str(ls[0])} and {str(ls[1])}"
     else:
         result = ""
 
         for item in ls[:-1]:
-            result += item + ", "
+            result += str(item) + ", "
 
-        return result + "and " + ls[-1]
+        return result + "and " + str(ls[-1])

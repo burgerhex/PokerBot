@@ -96,6 +96,7 @@ async def on_message(message):
         game = Game(reactors, client)
         games.append(game)
         await game.deal_to_all()
+        # await game.send_embed()
         await game.round()
 
 
